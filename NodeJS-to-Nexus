@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    environment {
+        NPM_REGISTRY = "http://nexus.example.com:8081/repository/npm-releases/"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/example/myapp-node.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Publish to Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-npm-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh """
+                    npm set registry $NPM_REGISTRY
+                    echo "//nexus.example.com:8081/repository/npm-releases/:_auth=\$(echo -n $NEXUS_USER:$NEXUS_PASS | base64)" > ~/.npmrc
+                    npm publish --registry $NPM_REGISTRY
+                    """
+                }
+            }
+        }
+    }
+}
