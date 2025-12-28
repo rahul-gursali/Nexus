@@ -1,0 +1,48 @@
+Step 1: Download Nexus
+
+# Download latest version
+wget https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+
+# Extract
+tar -xvf latest-unix.tar.gz
+
+# Move to installation directory
+sudo mv nexus-3.* /opt/nexus
+
+Step 2: Configure Nexus
+
+# Create nexus user
+sudo useradd nexus
+sudo chown -R nexus:nexus /opt/nexus
+
+# Configure memory (edit nexus.vmoptions)
+sudo nano /opt/nexus/bin/nexus.vmoptions
+# Adjust -Xms and -Xmx values (e.g., -Xms2g -Xmx2g)
+
+Step 3: Run as Service
+
+# Create systemd service
+sudo nano /etc/systemd/system/nexus.service
+
+# Add:
+[Unit]
+Description=Nexus Service
+After=network.target
+
+[Service]
+Type=forking
+User=nexus
+ExecStart=/opt/nexus/bin/nexus start
+ExecStop=/opt/nexus/bin/nexus stop
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+
+Step 4: Start Nexus
+
+sudo systemctl daemon-reload
+sudo systemctl start nexus
+sudo systemctl enable nexus
+
+
